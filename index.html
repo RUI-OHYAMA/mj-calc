@@ -3,183 +3,367 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>🀄︎麻雀SCORE計算ツール🀅</title>
+    <title>麻雀精算管理システム</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        :root { --line-color: #06C755; --primary-color: #2c3e50; --bg-color: #f0f2f5; --card-bg: #ffffff; --text-color: #333333; --border-color: #e2e8f0; }
-        body.dark { --bg-color: #1a202c; --card-bg: #2d3748; --text-color: #f7fafc; --border-color: #4a5568; --primary-color: #cbd5e0; }
-        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; padding: 8px; background: var(--bg-color); color: var(--text-color); margin: 0; transition: 0.3s; }
-        .card { background: var(--card-bg); padding: 15px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); max-width: 500px; margin: auto; box-sizing: border-box; }
-        .header-flex { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border-color); padding-bottom: 8px; margin-bottom: 12px; }
-        h2 { margin: 0; font-size: 1.1em; }
-        .dark-toggle { cursor: pointer; font-size: 1.2em; }
-        .quick-settings { display: flex; gap: 8px; margin-bottom: 12px; }
-        .quick-btn { flex: 1; padding: 6px; font-size: 0.75em; border: 1px solid var(--border-color); border-radius: 6px; background: #edf2f7; cursor: pointer; color: #2d3748; }
-        .config-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
-        .config-item { display: flex; flex-direction: column; gap: 3px; }
-        .config-item label { font-size: 0.7em; font-weight: bold; color: #718096; }
-        input, select { padding: 8px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px; background: var(--card-bg); color: var(--text-color); width: 100%; box-sizing: border-box; height: 38px; }
-        .player-row { display: grid; grid-template-columns: 40px 1fr 1fr 1fr; gap: 5px; margin-bottom: 8px; align-items: center; }
-        .sort-btns { display: flex; flex-direction: column; gap: 2px; }
-        .sort-btn { font-size: 10px; padding: 0; height: 16px; width: 30px; border: 1px solid var(--border-color); border-radius: 4px; background: #edf2f7; cursor: pointer; }
+        :root { --main-bg: #f0f2f5; --card-bg: #ffffff; --text: #333; --accent: #007bff; --border: #ddd; --hint: #777; }
+        body { font-family: sans-serif; background: var(--main-bg); color: var(--text); margin: 0; padding: 10px; }
+        .card { background: var(--card-bg); padding: 15px; border-radius: 12px; max-width: 500px; margin: auto; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h2 { font-size: 1.1em; margin: 0 0 15px 0; text-align: center; border-bottom: 2px solid var(--accent); padding-bottom: 8px; }
+        
+        .tabs { display: flex; gap: 5px; margin-bottom: 15px; }
+        .tab { flex: 1; text-align: center; padding: 10px; background: #eee; cursor: pointer; border-radius: 6px; font-weight: bold; color: #666; font-size: 0.85em; }
+        .tab.active { background: var(--accent); color: white; }
+
+        .config-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .config-item { display: flex; flex-direction: column; }
+        .config-item label { font-size: 0.7em; font-weight: bold; margin-bottom: 1px; color: #555; }
+        .hint-text { font-size: 0.6em; color: var(--hint); margin-bottom: 4px; line-height: 1.2; }
+        input, select { padding: 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; background: var(--card-bg); color: var(--text); height: 40px; box-sizing: border-box; }
+        .sub-input { margin-top: 4px; border-color: var(--accent); background: #f0f7ff; }
+
+        .player-row { display: grid; grid-template-columns: 40px 1.2fr 1fr 1fr; gap: 5px; margin-bottom: 8px; align-items: center; }
+        .sort-btn-group { display: flex; flex-direction: column; }
+        .sort-btn { font-size: 10px; height: 18px; cursor: pointer; border: 1px solid var(--border); background: #f8f9fa; }
         .input-group { display: flex; align-items: center; }
-        .sign-btn { background: #edf2f7; border: 1px solid var(--border-color); border-radius: 6px 0 0 6px; padding: 8px 4px; font-size: 12px; font-weight: bold; min-width: 32px; height: 38px; color: #333; }
-        .sign-btn.minus { color: #e53e3e; background: #fff5f5; }
-        .player-row input { border-radius: 0 8px 8px 0; border-left: none; text-align: center; height: 38px; }
-        .player-row .p-name { border-radius: 8px; border-left: 1px solid var(--border-color); text-align: left; padding-left: 5px; font-size: 12px; }
-        #suggestion { background: #ebf8ff; color: #2b6cb0; padding: 8px; border-radius: 8px; font-size: 0.8em; margin: 10px 0; border: 1px solid #bee3f8; text-align: center; display: none; cursor: pointer; }
-        .btn-calc { background: #2c3e50; color: white; border: none; width: 100%; padding: 14px; border-radius: 12px; font-size: 1em; font-weight: bold; cursor: pointer; }
-        .share-area { display: none; margin-top: 15px; border-top: 2px dashed var(--border-color); padding-top: 15px; }
-        #result-capture { padding: 12px; background: #fffaf0; border: 1px solid #feebc8; border-radius: 12px; color: #2d3748; margin-bottom: 10px; }
-        .dark #result-capture { background: #1a202c; color: #f7fafc; border-color: #4a5568; }
-        #result-text { white-space: pre-wrap; font-size: 0.85em; line-height: 1.5; font-family: sans-serif; }
-        .action-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .btn-line { background: var(--line-color); color: white; border: none; padding: 12px; border-radius: 10px; font-weight: bold; }
-        .btn-img { background: #3182ce; color: white; border: none; padding: 12px; border-radius: 10px; font-weight: bold; }
-        .history-area { margin-top: 20px; font-size: 0.8em; border-top: 1px solid var(--border-color); padding-top: 10px; }
-        .history-item { padding: 8px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; cursor: pointer; }
+        .sign-btn { width: 34px; height: 40px; border: 1px solid var(--border); border-radius: 6px 0 0 6px; font-weight: bold; cursor: pointer; }
+        .sign-btn.plus { background: #e7f3ff; color: #007bff; }
+        .sign-btn.minus { background: #fff0f0; color: #dc3545; }
+        .player-row input { border-radius: 0 6px 6px 0; border-left: none; text-align: center; width: 100%; }
+
+        .btn-main { background: #28a745; color: white; border: none; width: 100%; padding: 12px; border-radius: 8px; font-size: 1em; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        #scoreTable { width: 100%; font-size: 0.75em; border-collapse: collapse; margin-top: 15px; background: #fff; }
+        #scoreTable th, #scoreTable td { border: 1px solid var(--border); padding: 6px 4px; text-align: center; }
+        #scoreTable th { background: #f8f9fa; }
         .hidden { display: none !important; }
+        .result-box { margin-top: 15px; padding: 12px; background: #fff9db; border: 1px solid #fab005; border-radius: 8px; }
+        pre { white-space: pre-wrap; font-size: 0.85em; margin: 0; color: #333; line-height: 1.5; font-family: monospace; }
     </style>
 </head>
 <body>
-<div class="card" id="mainCard">
-    <div class="header-flex">
-        <h2>🀄︎麻雀SCORE計算ツール🀅</h2>
-        <span class="dark-toggle" onclick="toggleDark()">🌙</span>
+<div class="card">
+    <h2>麻雀精算管理システム</h2>
+
+    <div class="tabs">
+        <div class="tab active" id="tab-direct" onclick="switchMode('direct')">直接入力</div>
+        <div class="tab" id="tab-record" onclick="switchMode('record')">戦績記録</div>
     </div>
-    <div class="quick-settings">
-        <button class="quick-btn" onclick="applyQuick(50, 100, 100)">点5 (0.5/100/100)</button>
-        <button class="quick-btn" onclick="applyQuick(100, 500, 1000)">ピン (1.0/500/1000)</button>
-    </div>
+
     <div class="config-grid">
-        <div class="config-item"><label>対局日</label><input type="date" id="playDate"></div>
-        <div class="config-item"><label>人数</label><select id="memberCount" onchange="updatePlayerRows()"><option value="3">3人</option><option value="4" selected>4人</option><option value="5">5人</option></select></div>
-        <div class="config-item"><label>レート/pt</label><select id="rateSelect" onchange="updateCustomUI()"><option value="50">50円</option><option value="100">100円</option><option value="custom">直接入力</option></select><input type="number" id="customRate" class="hidden" placeholder="円" inputmode="numeric"></div>
-        <div class="config-item"><label>チップ/枚</label><select id="chipSelect" onchange="updateCustomUI()"><option value="100" selected>100円</option><option value="500">500円</option><option value="custom">直接入力</option></select><input type="number" id="customChip" class="hidden" placeholder="円" inputmode="numeric"></div>
-        <div class="config-item"><label>場代合計</label><input type="number" id="tableFee" value="2000" inputmode="numeric"></div>
-        <div class="config-item"><label>精算単位</label><select id="roundUnit"><option value="100">100円</option><option value="500">500円</option><option value="1000" selected>1000円</option></select></div>
-        <div class="config-item"><label>タイプ</label><select id="feeType" onchange="updateFeeUI()"><option value="gradient">収支連動</option><option value="equal">均等</option><option value="none">なし</option></select></div>
-        <div class="config-item" id="exemptRow"><label>免除ライン</label><input type="number" id="exemptLimit" value="-5000" inputmode="numeric"></div>
-    </div>
-    <div id="suggestion" onclick="applySuggestion()"></div>
-    <div id="playerList"></div>
-    <button class="btn-calc" onclick="calculate()">計算実行 ＆ 履歴保存</button>
-    <div id="shareArea" class="share-area">
-        <div id="result-capture"><div id="result-text"></div></div>
-        <div class="action-btns">
-            <button class="btn-line" onclick="shareLine()">LINE送信</button>
-            <button class="btn-img" onclick="saveImage()">画像保存</button>
+        <div class="config-item">
+            <label>パスコード</label>
+            <div class="hint-text">設定の保存・呼出用</div>
+            <div style="display:flex; gap:2px;">
+                <input type="password" id="passCode" placeholder="4桁" oninput="loadPreset()" style="width:70%">
+                <button onclick="savePreset()" style="font-size:10px; flex:1;">保存</button>
+            </div>
+        </div>
+        <div class="config-item">
+            <label>場代合計(円)</label>
+            <div class="hint-text">お店に支払う総額</div>
+            <input type="number" id="tableFee" value="5000">
+        </div>
+        
+        <div class="config-item">
+            <label>レート</label>
+            <div class="hint-text">1ptあたりの金額</div>
+            <select id="rateSelect" onchange="toggleFreeInput('rateSelect', 'rateInput')">
+                <option value="50">50円</option><option value="100" selected>100円</option><option value="500">500円</option><option value="1000">1000円</option><option value="free">自由入力</option>
+            </select>
+            <input type="number" id="rateInput" value="100" class="sub-input hidden">
+        </div>
+
+        <div class="config-item">
+            <label>チップ1枚</label>
+            <div class="hint-text">1枚あたりの金額</div>
+            <select id="chipSelect" onchange="toggleFreeInput('chipSelect', 'chipInput')">
+                <option value="100">100円</option><option value="300">300円</option><option value="500" selected>500円</option><option value="1000">1000円</option><option value="free">自由入力</option>
+            </select>
+            <input type="number" id="chipInput" value="500" class="sub-input hidden">
+        </div>
+
+        <div class="config-item">
+            <label>精算単位</label>
+            <div class="hint-text">受け渡しの最小単位</div>
+            <select id="unitSelect" onchange="toggleFreeInput('unitSelect', 'unitInput')">
+                <option value="100">100円</option><option value="500">500円</option><option value="1000" selected>1000円</option><option value="free">自由入力</option>
+            </select>
+            <input type="number" id="unitInput" value="1000" class="sub-input hidden">
+        </div>
+
+        <div class="config-item">
+            <label>場代の分配</label>
+            <div class="hint-text">トップ・浮き組で負担</div>
+            <select id="feeType">
+                <option value="slope">傾斜分配</option><option value="equal">均等配分</option>
+            </select>
+        </div>
+
+        <div class="config-item">
+            <label>免除ライン</label>
+            <div class="hint-text">これ以下は場代0円</div>
+            <input type="number" id="exemptLimit" value="100" placeholder="例:100">
+        </div>
+        <div class="config-item">
+            <label>人数</label>
+            <div class="hint-text">対局人数</div>
+            <input type="number" id="memberCount" value="4" onchange="initRows()">
         </div>
     </div>
-    <div class="history-area"><b>🕒 最近の履歴 (最新10件)</b><div id="historyList"></div></div>
+
+    <div id="playerList"></div>
+    
+    <div id="recordBtns" class="hidden">
+        <div id="suggestion" style="background:#e7f3ff; padding:10px; border-radius:8px; font-size:0.8em; margin:10px 0; text-align:center; cursor:pointer; color:#0056b3; border:1px solid #b3d7ff" onclick="applySug()"></div>
+        <button class="btn-main" style="background:#007bff" onclick="addRound()">対局スコアを記録</button>
+        <div style="overflow-x:auto"><table id="scoreTable"><thead><tr id="tableHeader"></tr></thead><tbody id="tableBody"></tbody></table></div>
+        <button onclick="resetRounds()" style="width:100%; margin-top:10px; font-size:11px; color:#999; background:none; border:none; text-decoration:underline; cursor:pointer">全戦績削除</button>
+    </div>
+
+    <button class="btn-main" onclick="calculate()" style="background:#333; height:50px; margin-top:15px;">最終精算を実行</button>
+
+    <div id="shareArea" class="hidden" style="margin-top:15px; border-top:1px solid #ccc; padding-top:15px">
+        <div id="result-capture" class="result-box"><pre id="result-text"></pre></div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px">
+            <button onclick="shareLine()" style="background:#06C755; color:white; border:none; padding:12px; border-radius:8px; font-weight:bold; cursor:pointer">LINE</button>
+            <button onclick="saveImage()" style="background:#555; color:white; border:none; padding:12px; border-radius:8px; font-weight:bold; cursor:pointer">画像保存</button>
+        </div>
+    </div>
 </div>
 
 <script>
-window.onload = () => { document.getElementById('playDate').valueAsDate = new Date(); updatePlayerRows(); updateCustomUI(); updateFeeUI(); showHistory(); if(localStorage.getItem('dark') === 'true') toggleDark(); };
-function toggleDark() { document.body.classList.toggle('dark'); localStorage.setItem('dark', document.body.classList.contains('dark')); }
-function applyQuick(r, c, u) { document.getElementById('rateSelect').value = r; document.getElementById('chipSelect').value = c; document.getElementById('roundUnit').value = u; updateCustomUI(); }
-function updateCustomUI() { const rS = document.getElementById('rateSelect'); document.getElementById('customRate').classList.toggle('hidden', rS.value !== 'custom'); document.getElementById('customChip').classList.toggle('hidden', document.getElementById('chipSelect').value !== 'custom'); document.getElementById('exemptLimit').value = (getVal('rateSelect','customRate') >= 100) ? -10000 : -5000; }
-function updateFeeUI() { document.getElementById('exemptRow').classList.toggle('hidden', document.getElementById('feeType').value !== 'gradient'); }
-function getVal(sId, iId) { const s = document.getElementById(sId); return s.value==='custom' ? (parseFloat(document.getElementById(iId).value)||0) : parseFloat(s.value); }
+let currentMode = 'direct';
+let playerHistory = []; 
+let lastSug = 0;
 
-function updatePlayerRows() {
-    const count = document.getElementById('memberCount').value; const container = document.getElementById('playerList'); const savedNames = JSON.parse(localStorage.getItem('mj_player_names') || "[]");
-    container.innerHTML = '<div style="display:grid;grid-template-columns:40px 1fr 1fr 1fr;gap:5px;font-size:0.7em;color:#718096;text-align:center;margin-bottom:5px;"><span>順入</span><span>名前</span><span>スコア</span><span>枚数</span></div>';
-    for (let i = 0; i < count; i++) {
-        container.innerHTML += `<div class="player-row" data-index="${i}"><div class="sort-btns"><button class="sort-btn" onclick="moveRow(${i},-1)">▲</button><button class="sort-btn" onclick="moveRow(${i},1)">▼</button></div><input type="text" class="p-name" value="${savedNames[i]||'プレイヤー'+String.fromCharCode(65+i)}"><div class="input-group"><button class="sign-btn plus" onclick="tglSign(this)">+</button><input type="number" class="p-score" oninput="checkSug()" placeholder="0" inputmode="numeric"></div><div class="input-group"><button class="sign-btn plus" onclick="tglSign(this)">+</button><input type="number" class="p-chip" oninput="checkSug()" placeholder="0" inputmode="numeric"></div></div>`;
+window.onload = () => { initRows(); };
+
+function toggleFreeInput(selId, inpId) {
+    const sel = document.getElementById(selId);
+    const inp = document.getElementById(inpId);
+    if(sel.value === 'free') { inp.classList.remove('hidden'); }
+    else { inp.classList.add('hidden'); inp.value = sel.value; }
+}
+
+function switchMode(mode) {
+    currentMode = mode;
+    document.getElementById('tab-direct').className = mode === 'direct' ? 'tab active' : 'tab';
+    document.getElementById('tab-record').className = mode === 'record' ? 'tab active' : 'tab';
+    document.getElementById('recordBtns').classList.toggle('hidden', mode === 'direct');
+    updateTableHeader(); updateTable();
+}
+
+function initRows() {
+    const count = parseInt(document.getElementById('memberCount').value) || 4;
+    const container = document.getElementById('playerList');
+    container.innerHTML = '<div style="display:grid; grid-template-columns:40px 1.2fr 1fr 1fr; font-size:0.7em; color:#666; text-align:center; margin-bottom:5px;"><span>順入</span><span>名前</span><span>スコア</span><span>チップ</span></div>';
+    playerHistory = Array.from({length: count}, () => []);
+    for (let i=0; i<count; i++) {
+        container.innerHTML += `<div class="player-row" data-id="${i}">
+            <div class="sort-btn-group"><button class="sort-btn" onclick="move(this,-1)">▲</button><button class="sort-btn" onclick="move(this,1)">▼</button></div>
+            <input type="text" class="p-name" value="プレイヤー${i+1}" oninput="updateTableHeader(); updateTable();">
+            <div class="input-group"><button class="sign-btn plus" onclick="tglSign(this)">+</button><input type="number" class="p-score" oninput="checkSug()" placeholder="0" inputmode="decimal"></div>
+            <div class="input-group"><button class="sign-btn plus" onclick="tglSign(this)">+</button><input type="number" class="p-chip" placeholder="0" inputmode="numeric"></div>
+        </div>`;
     }
+    updateTableHeader();
 }
-function moveRow(index, dir) {
-    const rows = Array.from(document.querySelectorAll('.player-row')); const names = rows.map(r => r.querySelector('.p-name').value);
-    const scores = rows.map(r => ({v: r.querySelector('.p-score').value, s: r.querySelector('.sign-btn').innerText}));
-    const chips = rows.map(r => ({v: r.querySelectorAll('.p-chip')[0].value, s: r.querySelectorAll('.sign-btn')[1].innerText}));
-    let target = index + dir; if (target < 0 || target >= rows.length) return;
-    [names[index], names[target]] = [names[target], names[index]]; [scores[index], scores[target]] = [scores[target], scores[index]]; [chips[index], chips[target]] = [chips[target], chips[index]];
-    updatePlayerRows(); const newRows = document.querySelectorAll('.player-row');
-    newRows.forEach((r, i) => {
-        r.querySelector('.p-name').value = names[i]; r.querySelector('.p-score').value = scores[i].v; r.querySelector('.sign-btn').innerText = scores[i].s;
-        r.querySelector('.sign-btn').className = scores[i].s === "+" ? "sign-btn plus" : "sign-btn minus";
-        r.querySelectorAll('.p-chip')[0].value = chips[i].v; r.querySelectorAll('.sign-btn')[1].innerText = chips[i].s;
-        r.querySelectorAll('.sign-btn')[1].className = chips[i].s === "+" ? "sign-btn plus" : "sign-btn minus";
-    });
-}
+
 function tglSign(b) { b.innerText = b.innerText === "+" ? "-" : "+"; b.className = b.innerText === "+" ? "sign-btn plus" : "sign-btn minus"; checkSug(); }
-function getSV(el) { return (parseFloat(el.value) || 0) * (el.previousElementSibling.innerText === "-" ? -1 : 1); }
+function getV(el) { return (parseFloat(el.value)||0) * (el.previousElementSibling.innerText==="-" ? -1 : 1); }
 
 function checkSug() {
-    const count = parseInt(document.getElementById('memberCount').value); const sEls = Array.from(document.querySelectorAll('.p-score')); const cEls = Array.from(document.querySelectorAll('.p-chip'));
-    if (sEls.filter(e => e.value !== "").length === count - 1 || cEls.filter(e => e.value !== "").length === count - 1) {
-        let s=0, c=0; sEls.forEach(e=>s+=getSV(e)); cEls.forEach(e=>c+=getSV(e)); lastSug = {s:-s, c:-c};
-        document.getElementById('suggestion').innerHTML = `💡 残り： <b>${lastSug.s}pt / ${lastSug.c}枚</b>`; document.getElementById('suggestion').style.display = 'block';
-    } else document.getElementById('suggestion').style.display = 'none';
+    if (currentMode !== 'record') return;
+    const scores = Array.from(document.querySelectorAll('.p-score'));
+    const filled = scores.filter(e => e.value !== "");
+    if (filled.length === scores.length - 1) {
+        let sum = 0; scores.forEach(e => sum += getV(e));
+        lastSug = -sum;
+        document.getElementById('suggestion').innerHTML = `💡 残り： <b>${lastSug > 0 ? '+' : ''}${lastSug}</b> (適用)`;
+        document.getElementById('suggestion').style.display = 'block';
+    } else { document.getElementById('suggestion').style.display='none'; }
 }
-function applySuggestion() {
-    ['score','chip'].forEach(t => { document.querySelectorAll(`.p-${t}`).forEach(el => { if(el.value === "") { const v = t==='score'?lastSug.s:lastSug.c; el.value = Math.abs(v); const b = el.previousElementSibling; b.innerText = v<0?"-":"+"; b.className = v<0?"sign-btn minus":"sign-btn plus"; } }); });
-    document.getElementById('suggestion').style.display = 'none';
+
+function applySug() {
+    document.querySelectorAll('.p-score').forEach(el => {
+        if (el.value === "") { el.value = Math.abs(lastSug); el.previousElementSibling.innerText = lastSug < 0 ? "-" : "+"; el.previousElementSibling.className = lastSug < 0 ? "sign-btn minus" : "sign-btn plus"; }
+    });
+    checkSug();
+}
+
+function addRound() {
+    const rows = document.querySelectorAll('.player-row');
+    const scores = Array.from(rows).map(row => getV(row.querySelector('.p-score')));
+    rows.forEach((row, i) => playerHistory[row.getAttribute('data-id')].push(scores[i]));
+    updateTable();
+    document.querySelectorAll('.p-score').forEach(el => el.value = "");
+    checkSug();
+}
+
+function move(btn, dir) {
+    const row = btn.closest('.player-row');
+    const rows = Array.from(document.querySelectorAll('.player-row'));
+    const idx = rows.indexOf(row);
+    if (dir === -1 && idx > 0) row.parentNode.insertBefore(row, rows[idx-1]);
+    else if (dir === 1 && idx < rows.length - 1) row.parentNode.insertBefore(rows[idx+1], row);
+    updateTableHeader(); updateTable();
+}
+
+function updateTableHeader() {
+    const rows = document.querySelectorAll('.player-row');
+    const tableHeader = document.getElementById('tableHeader');
+    let html = '<th>回</th>';
+    rows.forEach(row => {
+        const name = row.querySelector('.p-name').value;
+        html += `<th>${name.substring(0,3)}</th>`;
+    });
+    tableHeader.innerHTML = html;
+}
+
+function updateTable() {
+    const rows = document.querySelectorAll('.player-row');
+    const body = document.getElementById('tableBody');
+    body.innerHTML = "";
+    const roundCount = playerHistory[0] ? playerHistory[0].length : 0;
+    for (let r = 0; r < roundCount; r++) {
+        let rowHtml = `<td>${r+1}</td>`;
+        rows.forEach(row => {
+            const s = playerHistory[row.getAttribute('data-id')][r];
+            rowHtml += `<td>${s > 0 ? '+' : ''}${s}</td>`;
+        });
+        body.innerHTML += `<tr>${rowHtml}</tr>`;
+    }
+    if (roundCount > 0) {
+        let footerHtml = `<tr style="font-weight:bold; background:#eef; color:#0056b3;"><td>計</td>`;
+        rows.forEach(row => {
+            const sum = playerHistory[row.getAttribute('data-id')].reduce((a, b) => a + b, 0);
+            footerHtml += `<td>${sum > 0 ? '+' : ''}${sum}</td>`;
+        });
+        body.innerHTML += footerHtml + `</tr>`;
+    }
 }
 
 function calculate() {
-    const rate = getVal('rateSelect','customRate'); const chipRate = getVal('chipSelect','customChip');
-    const totalFee = parseFloat(document.getElementById('tableFee').value)||0;
-    const feeType = document.getElementById('feeType').value; const unit = parseInt(document.getElementById('roundUnit').value);
-    const exemptLimit = parseFloat(document.getElementById('exemptLimit').value)||0;
-    const names = Array.from(document.querySelectorAll('.p-name')).map(n => n.value);
-    const sEls = Array.from(document.querySelectorAll('.p-score')); const cEls = Array.from(document.querySelectorAll('.p-chip'));
-    localStorage.setItem('mj_player_names', JSON.stringify(names));
+    const rate = parseInt(document.getElementById('rateInput').value);
+    const chipRate = parseInt(document.getElementById('chipInput').value);
+    const tableFee = parseInt(document.getElementById('tableFee').value);
+    const unit = parseInt(document.getElementById('unitInput').value);
+    const exemptPoint = Math.abs(parseInt(document.getElementById('exemptLimit').value));
+    const feeType = document.getElementById('feeType').value;
+    
+    const rows = document.querySelectorAll('.player-row');
+    let results = Array.from(rows).map(row => {
+        const id = row.getAttribute('data-id');
+        const name = row.querySelector('.p-name').value;
+        const totalScore = (currentMode === 'record') ? playerHistory[id].reduce((a,b)=>a+b, 0) : getV(row.querySelector('.p-score'));
+        const chipCount = getV(row.querySelector('.p-chip'));
+        let gameInc = totalScore * rate;
+        let rawSum = gameInc + (chipCount * chipRate);
+        return { name, totalScore, gameInc, rawSum, finalHand: 0, fee: 0, isExempt: false, power: 0 };
+    });
 
-    let players = [];
-    for(let i=0; i<names.length; i++){
-        const s = getSV(sEls[i]), c = getSV(cEls[i]);
-        players.push({name:names[i], score:s, chip:c, gameInc:s*rate, chipInc:c*chipRate, fee:0, final:0, isExempt:false});
+    // 1. 端数調整
+    let fAdjustment = 0;
+    results.forEach(p => {
+        let rounded = (p.rawSum < 0) ? Math.ceil(p.rawSum / unit) * unit : Math.floor(p.rawSum / unit) * unit;
+        fAdjustment += (p.rawSum - rounded);
+        p.finalHand = rounded;
+    });
+    const topIdx = results.reduce((best, cur, idx, arr) => cur.totalScore > arr[best].totalScore ? idx : best, 0);
+    results[topIdx].finalHand += Math.round(fAdjustment);
+
+    // 2. 場代精算（免除ラインを底とした傾斜分配）
+    if (feeType === 'equal') {
+        const perPerson = Math.floor((tableFee / results.length) / unit) * unit;
+        results.forEach(p => p.fee = perPerson);
+        results[topIdx].fee += (tableFee - (perPerson * results.length));
+    } else {
+        const baseLine = -exemptPoint;
+        let totalPower = 0;
+        
+        results.forEach((p, idx) => {
+            p.isExempt = (p.totalScore <= baseLine);
+            if (!p.isExempt) {
+                // 免除ラインからの浮き幅を負担パワーとする
+                p.power = p.totalScore - baseLine; 
+                totalPower += p.power;
+            }
+        });
+
+        let allocatedFeeSum = 0;
+        if (totalPower > 0) {
+            results.forEach((p, idx) => {
+                if (idx !== topIdx && !p.isExempt) {
+                    // 他のプレイヤーにパワーに応じた場代を割り振る
+                    p.fee = Math.floor((tableFee * (p.power / totalPower)) / unit) * unit;
+                    allocatedFeeSum += p.fee;
+                }
+            });
+            // 残りをすべてトップが負担
+            results[topIdx].fee = tableFee - allocatedFeeSum;
+        } else {
+            results[topIdx].fee = tableFee;
+        }
     }
 
-    if(feeType === 'gradient'){
-        players.forEach(p => p.isExempt = (p.gameInc <= exemptLimit));
-        let activeSum = 0; players.forEach(p => { if(!p.isExempt && p.gameInc > 0) activeSum += p.gameInc; });
-        if(activeSum > 0) players.forEach(p => { if(!p.isExempt && p.gameInc > 0) p.fee = totalFee * (p.gameInc/activeSum); });
-    } else if(feeType === 'equal') { players.forEach(p => p.fee = totalFee/players.length); }
-
-    let fSum = 0;
-    players.forEach(p => {
-        const raw = (p.gameInc + p.chipInc) - p.fee;
-        p.final = (raw < 0) ? Math.ceil(raw / unit) * unit : Math.floor(raw / unit) * unit;
-        fSum += (raw - p.final);
+    let txt = `【精算リザルト】\n━━━━━━━━━━━━━━\n`;
+    txt += `◆最終 Pt収支\n`;
+    results.forEach(p => txt += `${p.name}: ${p.totalScore > 0 ? '+' : ''}${p.totalScore} pt\n`);
+    txt += `\n◆受け渡し額 (個人間)\n`;
+    results.forEach(p => txt += `${p.name}: ${p.finalHand > 0 ? '+' : ''}${p.finalHand.toLocaleString()} 円\n`);
+    txt += `\n◆場代支払い (お店へ)\n`;
+    results.forEach(p => txt += `${p.name}: ${p.fee.toLocaleString()} 円 ${p.isExempt ? '※免除' : ''}\n`);
+    txt += `\n◆実質収支 (場代込合計)\n`;
+    results.forEach(p => {
+        const total = p.finalHand - p.fee;
+        txt += `${p.name}: ${total > 0 ? '+' : ''}${total.toLocaleString()} 円\n`;
     });
-    let top = players.reduce((a, b) => a.score > b.score ? a : b);
-    top.final += Math.round(fSum);
-
-    const d = new Date(document.getElementById('playDate').value);
-    const dateStr = `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${["日","月","火","水","木","金","土"][d.getDay()]}）`;
-    let txt = `【麻雀精算結果】\n${dateStr}\n━━━━━━━━━━━━━━\n`;
-    players.forEach(p => {
-        txt += `${p.name}: ${p.final.toLocaleString()} 円\n (内訳)スコア:${p.score}pt(${p.gameInc.toLocaleString()}円) / チップ:${p.chip}枚(${p.chipInc.toLocaleString()}円) / 場代:-${Math.round(p.fee).toLocaleString()}円\n${p.isExempt && feeType==='gradient'?' ※場代免除\n':''}\n`;
-    });
-    txt += `━━━━━━━━━━━━━━\n[設定] 1pt=${rate}円 / チップ=${chipRate}円 / 場代合計:${totalFee.toLocaleString()}円\n※${unit}円単位で精算。`;
-
+    txt += `━━━━━━━━━━━━━━\nレート:${rate}円/精算単位:${unit}円\n免除ライン:-${exemptPoint}pt`;
+    
     document.getElementById('result-text').innerText = txt;
-    document.getElementById('shareArea').style.display = 'block';
-    saveHistory(dateStr, players);
-    setTimeout(() => document.getElementById('shareArea').scrollIntoView({behavior:'smooth'}), 200);
+    document.getElementById('shareArea').classList.remove('hidden');
 }
 
-function saveHistory(date, players) {
-    let history = JSON.parse(localStorage.getItem('mj_history') || "[]");
-    history.unshift({date, summary: players.map(p => `${p.name}(${p.final.toLocaleString()})`).join(', ')});
-    localStorage.setItem('mj_history', JSON.stringify(history.slice(0, 10)));
-    showHistory();
+function savePreset() {
+    const code = document.getElementById('passCode').value;
+    if(!code) return alert("パスコードを入力してください");
+    const names = Array.from(document.querySelectorAll('.p-name')).map(n=>n.value);
+    let ps = JSON.parse(localStorage.getItem('mj_final_std_presets') || "{}");
+    ps[code] = { 
+        names, fee: document.getElementById('tableFee').value, 
+        rate: document.getElementById('rateInput').value,
+        chip: document.getElementById('chipInput').value,
+        unit: document.getElementById('unitInput').value,
+        count: document.getElementById('memberCount').value,
+        exempt: document.getElementById('exemptLimit').value
+    };
+    localStorage.setItem('mj_final_std_presets', JSON.stringify(ps));
+    alert("設定を保存しました。");
 }
-function showHistory() {
-    const list = document.getElementById('historyList'); const history = JSON.parse(localStorage.getItem('mj_history') || "[]");
-    list.innerHTML = history.length ? '' : 'なし';
-    history.forEach(h => { list.innerHTML += `<div class="history-item"><span>${h.date}</span><span>${h.summary}</span></div>`; });
+
+function loadPreset() {
+    const code = document.getElementById('passCode').value;
+    const ps = JSON.parse(localStorage.getItem('mj_final_std_presets') || "{}");
+    if (ps[code]) {
+        document.getElementById('tableFee').value = ps[code].fee;
+        document.getElementById('rateInput').value = ps[code].rate;
+        document.getElementById('chipInput').value = ps[code].chip;
+        document.getElementById('unitInput').value = ps[code].unit;
+        document.getElementById('memberCount').value = ps[code].count || 4;
+        document.getElementById('exemptLimit').value = ps[code].exempt || 100;
+        initRows();
+        setTimeout(() => {
+            const inputs = document.querySelectorAll('.p-name');
+            ps[code].names.forEach((n, i) => { if(inputs[i]) inputs[i].value = n; });
+            updateTableHeader(); updateTable();
+            document.getElementById('passCode').style.background = "#d3f9d8";
+        }, 50);
+    }
 }
+
+function resetRounds() { if(confirm("戦績をすべて削除しますか？")) { playerHistory.forEach(h => h.length = 0); updateTable(); } }
 function shareLine() { window.open(`https://line.me/R/msg/text/?${encodeURIComponent(document.getElementById('result-text').innerText)}`, '_blank'); }
-function saveImage() {
-    html2canvas(document.querySelector("#result-capture")).then(canvas => {
-        const link = document.createElement('a'); link.download = `mahjong_${new Date().getTime()}.png`;
-        link.href = canvas.toDataURL(); link.click();
-    });
-}
+function saveImage() { html2canvas(document.querySelector("#result-capture")).then(c => { const l=document.createElement('a'); l.download='mj_result.png'; l.href=c.toDataURL(); l.click(); }); }
 </script>
 </body>
 </html>
